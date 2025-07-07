@@ -1,6 +1,5 @@
 # Benchmarking NVIDIA HPC Workloads on the Kempner AI Cluster
 
-Tags: #benchmarking #NVIDIA #HPC #KempnerAICluster #H100 #GH200 #HPCBenchmarks #SLURM
 
 # Overview 
 
