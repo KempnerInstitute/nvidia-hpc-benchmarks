@@ -1,0 +1,25 @@
+Job started at: 2025-07-06T22:53:07
+Running on hosts: holygpu8a10401
+Command line: /workspace/stream-gpu-linux-x86_64/stream_test -d 0 -n 1000000000 -t CSAT
+
+======================================================================================
+NVIDIA-STREAM 25.4.0  -- NVIDIA accelerated STREAM benchmark -- NVIDIA
+======================================================================================
+There is 1 device supporting CUDA
+Device 0: "NVIDIA H100 80GB HBM3" 	 132 SMs(9.0)	Memory: 2619MHz x 5120-bit = 3352.3 GB/s PEAK	 ECC is OFF
+
+Device Selected 0: "NVIDIA H100 80GB HBM3"
+ STREAM Benchmark implementation in CUDA
+ Array size (double)=1000000000*8*8 (61035 MB)
+
+STREAM tests: COPY SCALE ADD TRIAD
+
+Optimizing...
+
+
+Function      Rate (MB/s)   Avg time     Min time     Max time
+Copy:      3071120.9703       0.0052       0.0052       0.0052
+Scale:     3059058.0968       0.0052       0.0052       0.0052
+Add:       3125260.4738       0.0077       0.0077       0.0077
+Triad:     3127058.6779       0.0077       0.0077       0.0077
+Job finished at: 2025-07-06T22:53:31
