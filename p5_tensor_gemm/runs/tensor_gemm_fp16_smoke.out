@@ -1,0 +1,9 @@
+GPU: NVIDIA H100 80GB HBM3 (SM 90, 132 SMs, 79.2 GB, 1980 MHz)
+
+dtype               M        N        K    time_ms     TFLOPS
+──────────── ──────── ──────── ──────── ────────── ──────────
+fp16             8192     8192     8192      1.266      868.4
+
+Best achieved: 868.4 TFLOPS (fp16)
+H100 SXM theoretical peak (fp16 dense): 989.4 TFLOPS
+Achieved 87.8% of theoretical peak
