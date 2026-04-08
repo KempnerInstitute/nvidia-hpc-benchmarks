@@ -61,7 +61,27 @@ We tried the run with 1, 2, 4 GPUs on a single node, and 8 GPUs on two nodes. Th
 | 1       | 1      | 92160  | 1024 | 1 | 1 | 12.40    | 4.208e+04 ( 4.208e+04)   |
 | 1       | 2      | 136192 | 1024 | 2 | 1 | 20.28    | 8.304e+04 ( 4.152e+04)   |
 | 1       | 4      | 190464 | 1024 | 2 | 2 | 27.35    | 1.684e+05 ( 4.210e+04)   |
-| 2       | 4      | 264192 | 1024 | 4 | 2 | 37.49    | 3.279e+05 ( 4.099e+04)   |  
+| 2       | 8      | 264192 | 1024 | 4 | 2 | 37.49    | 3.279e+05 ( 4.099e+04)   |  
+
+
+## Parameterized Launcher
+
+Instead of maintaining separate scripts for each GPU configuration, you can use the parameterized launcher [`run_hpl.sh`](run_hpl.sh) which supports:
+
+- **Single runs**: Set `NODES`, `GPUS_PER_NODE`, `N`, `NB`, `P`, `Q` as environment variables.
+- **Sweep mode**: Set `HPL_SWEEP` to a space-separated list of `N:P:Q` tuples to benchmark multiple configurations in one job.
+- **Custom HPL.dat**: Set `HPL_DAT` to point to your own input file.
+
+Example:
+```bash
+# Single 4-GPU run
+NODES=1 GPUS_PER_NODE=4 N=190464 P=2 Q=2 sbatch run_hpl.sh
+
+# Sweep across configurations
+HPL_SWEEP="92160:1:1 136192:2:1 190464:2:2" sbatch run_hpl.sh
+```
+
+The original per-configuration scripts are preserved in the [`runs/`](runs/) directory for reference.
 
 
 

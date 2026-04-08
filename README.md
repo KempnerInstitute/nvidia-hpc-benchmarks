@@ -33,6 +33,19 @@ For this benchmarking effort, we use the official NVIDIA HPC Benchmark container
 - [NVIDIA HPC Benchmark](https://docs.nvidia.com/nvidia-hpc-benchmarks/overview.html)
 - [Convert NVIDIA HPC Benchmark Container to Singularity](p0_ngc_to_singularity/README.md)
 
+
+# Common Infrastructure
+
+All parameterized launchers share a common configuration layer in the [`common/`](common/) directory:
+
+| File | Purpose |
+|------|---------|
+| [`common/config.sh`](common/config.sh) | Shared SLURM/container defaults (partition, account, SIF path, modules) — all overridable via environment variables |
+| [`common/detect_arch.sh`](common/detect_arch.sh) | GPU architecture detection (Hopper/Blackwell) and precision gating (FP16/FP8/FP4) |
+| [`common/parse_results.py`](common/parse_results.py) | Auto-detect benchmark type from output logs, extract metrics, produce Markdown summary tables |
+
+Each benchmark directory (`p1`–`p5`) now contains a parameterized launcher (`run_*.sh`) alongside the original per-configuration scripts in `runs/`. The launchers accept environment variables for GPU count, precision, problem size, etc.
+
 # NVIDIA HPL Benchmark
 
 HPL (High-Performance Linpack) is a widely used benchmark for measuring the floating-point compute performance of supercomputers. It solves a dense system of linear equations and is the basis for the TOP500 list of supercomputers. In this section, we will run the HPL benchmark using the NVIDIA HPC container on the Kempner AI Cluster.
@@ -46,7 +59,7 @@ Here is the summary of the HPL benchmark runs on the Kempner AI Cluster:
 | 1       | 1      | 92160  | 1024 | 1 | 1 | 12.40    | 4.208e+04 ( 4.208e+04)   |
 | 1       | 2      | 136192 | 1024 | 2 | 1 | 20.28    | 8.304e+04 ( 4.152e+04)   |
 | 1       | 4      | 190464 | 1024 | 2 | 2 | 27.35    | 1.684e+05 ( 4.210e+04)   |
-| 2       | 4      | 264192 | 1024 | 4 | 2 | 37.49    | 3.279e+05 ( 4.099e+04)   |  
+| 2       | 8      | 264192 | 1024 | 4 | 2 | 37.49    | 3.279e+05 ( 4.099e+04)   |  
 
 
 # NVIDIA HPL-MxP Benchmark
@@ -57,7 +70,7 @@ HPL-MxP (High-Performance Linpack - Mixed Precision) is an enhanced version of t
 
 Here is a summary of MxP benchmark (using `FP16` for LU factorization) runs on the Kempner AI Cluster using NVIDIA Hopper GPUs (H100):
 
-| Metric               | 1 N 1 GPU  | 1 N 2 GPUs | 1 N 4 GPUs | 2 N 4 GPUs |
+| Metric               | 1 N 1 GPU  | 1 N 2 GPUs | 1 N 4 GPUs | 2 N 8 GPUs |
 |----------------------|------------|------------|------------|------------|
 | Problem Size (N)     | 92160      | 136192     | 190464     | 264192     |
 | Block Size (NB)      | 1024       | 1024       | 1024       | 1024       |
@@ -101,3 +114,35 @@ Here is the summary of the STREAM benchmark runs on the Kempner AI Cluster using
 
 
 Done!
+
+
+# Tensor-Core GEMM Saturation Benchmark
+
+The tensor-core GEMM saturation benchmark (`p5_tensor_gemm`) is a custom cuBLASLt-based microbenchmark designed to measure the **raw tensor-core throughput** of NVIDIA GPUs in FP16 and FP8 precisions. Unlike HPL/HPL-MxP (which solve a Linpack problem and use tensor cores as part of a larger workflow), this benchmark isolates the GEMM operation to determine how close the hardware gets to its theoretical peak.
+
+- [Tensor-Core GEMM Saturation Benchmark](p5_tensor_gemm/README.md)
+
+| Precision | Theoretical Peak (H100/H200) | What It Measures                     |
+|-----------|------------------------------|--------------------------------------|
+| FP16      | 989.4 TFLOPS                 | Half-precision tensor-core throughput |
+| FP8       | 1978.9 TFLOPS                | FP8 (E4M3) tensor-core throughput     |
+
+### Measured Results (Kempner AI Cluster)
+
+| GPU | Clock (MHz) | FP16 TFLOPS | % of Peak | FP8 TFLOPS | % of Peak |
+|-----|-------------|-------------|-----------|------------|-----------|
+| H100 SXM (holygpu8a17604) | 1980 | 928.4 | 93.8% | 1654.8 | 83.6% |
+| H200 SXM (holygpu8a10302) | 1980 | 885.5 | 89.5% | 1595.7 | 80.6% |
+
+
+# Benchmark Taxonomy
+
+This repository contains two categories of GPU benchmarks:
+
+| Category                      | Benchmarks           | What It Measures                                        |
+|-------------------------------|----------------------|---------------------------------------------------------|
+| **Linpack-style (end-to-end)**| HPL, HPL-MxP         | Dense linear solve performance (FP64, mixed-precision)  |
+| **Tensor-core saturation**    | Tensor GEMM (p5)     | Raw GEMM throughput at specific precisions (FP16, FP8)  |
+| **Memory / system**           | HPCG, STREAM         | Memory bandwidth, sparse solver, interconnect           |
+
+> **Key distinction:** HPL-MxP uses tensor cores for LU factorization but includes iterative refinement, communication, and other overhead — so its TFLOPS numbers reflect *application-level* throughput. The tensor GEMM benchmark isolates the compute kernel to measure *hardware-level* tensor-core saturation.
